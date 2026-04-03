@@ -41,6 +41,18 @@ def on_startup():
 def serve_main_html_page():
     return FileResponse("./src/index.html")
 
+# Get latest
+@app.get("/weatherdata/latest", response_model=WeatherData)
+def get_latest_weather(session: Session = Depends(get_session)):
+    latest = session.exec(
+        select(WeatherData).order_by(WeatherData.id.desc())
+    ).first()  # largest id = last inserted
+
+    if not latest:
+        raise HTTPException(status_code=404, detail="No weather data found")
+    
+    return latest
+
 # CREATE
 @app.post("/weatherdata/")
 def create_weatherdata(
