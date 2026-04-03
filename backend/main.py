@@ -1,4 +1,6 @@
+from http.client import HTTPResponse
 from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi.responses import FileResponse
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 from datetime import datetime
 
@@ -34,6 +36,10 @@ app = FastAPI()
 def on_startup():
     create_db_and_tables()
 
+# SERVE UP MAIN HTML PAGE
+@app.get("/")
+def serve_main_html_page():
+    return FileResponse("./src/index.html")
 
 # CREATE
 @app.post("/weatherdata/")
