@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Georgia Weather</title>
+  <title>Weatherstalk 9000</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Lora:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet" />
   <style>
     :root {
@@ -190,7 +191,6 @@
 
     /* big temperature */
     .temp-display {
-      font-family: 'Abril Fatface', serif;
       font-size: clamp(5rem, 16vw, 7.5rem);
       line-height: 1;
       color: var(--forest);
@@ -289,12 +289,18 @@
     .badge-low  { background: #d4e8cc; color: var(--forest); }
 
     .range-val {
-      font-family: 'Abril Fatface', serif;
       font-size: 1.7rem;
       line-height: 1;
     }
     .range-val.high { color: var(--barn); }
     .range-val.low  { color: var(--forest); }
+    .range-time {
+      font-size: 0.62rem;
+      color: var(--text-light);
+      margin-top: 0.3rem;
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 300;
+    }
     .range-unit {
       font-size: 0.68rem;
       color: var(--text-light);
@@ -356,8 +362,7 @@
   <header>
     <div class="header-inner">
       <div>
-        <div class="site-title">Down Home Weather</div>
-        <div class="site-subtitle">Rural Georgia &nbsp;·&nbsp; Est. Right Here</div>
+        <div class="site-title">Weatherstalk 9000</div>
       </div>
       <div class="header-date" id="js-date"></div>
     </div>
@@ -370,7 +375,7 @@
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/>
       </svg>
-      Georgia &nbsp;·&nbsp; Partly Sunny
+      Home
     </div>
 
     <!-- Hero card: current temp + humidity -->
@@ -396,10 +401,12 @@
           <div class="range-item">
             <span class="range-badge badge-high">High</span>
             <div class="range-val high" id="js-t-high">78<span class="range-unit">°F</span></div>
+            <div class="range-time" id="js-t-high-time">—</div>
           </div>
           <div class="range-item">
             <span class="range-badge badge-low">Low</span>
             <div class="range-val low" id="js-t-low">61<span class="range-unit">°F</span></div>
+            <div class="range-time" id="js-t-low-time">—</div>
           </div>
         </div>
       </div>
@@ -412,10 +419,12 @@
           <div class="range-item">
             <span class="range-badge badge-high">High</span>
             <div class="range-val high" id="js-h-high">82<span class="range-unit">%</span></div>
+            <div class="range-time" id="js-h-high-time">—</div>
           </div>
           <div class="range-item">
             <span class="range-badge badge-low">Low</span>
             <div class="range-val low" id="js-h-low">54<span class="range-unit">%</span></div>
+            <div class="range-time" id="js-h-low-time">—</div>
           </div>
         </div>
       </div>
@@ -458,6 +467,26 @@
      * loadWeather();
      */
 
+    function fmtDateTime(isoStr) {
+      const d = new Date(isoStr);
+      return d.toLocaleDateString('en-US', { month:'short', day:'numeric' })
+        + ' ' + d.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
+    }
+
+    async function getLatestWeather() {
+      const current_weather_results = await fetch('/weatherdata/latest');
+      const data = await current_weather_results.json();
+      setTemp(data.temp);
+      setHumidity(data.humidity);
+
+      const stats_res = await fetch('/weatherdata/24-hr_stats');
+      const stats = await stats_res.json();
+      set24hrVal('js-t-high', stats.temp_high,     '°F', stats.temp_high_time);
+      set24hrVal('js-t-low',  stats.temp_low,      '°F', stats.temp_low_time);
+      set24hrVal('js-h-high', stats.humidity_high, '%',  stats.humidity_high_time);
+      set24hrVal('js-h-low',  stats.humidity_low,  '%',  stats.humidity_low_time);
+    }
+
     function setTemp(val) {
       const el = document.getElementById('js-temp');
       const sup = el.querySelector('sup');
@@ -470,10 +499,16 @@
       el.textContent = val;
       el.appendChild(span);
     }
+    function set24hrVal(id, val, unit, time) {
+      const el = document.getElementById(id);
+      const span = el.querySelector('span');
+      el.textContent = val;
+      el.appendChild(span);
+      document.getElementById(id + '-time').textContent = fmtDateTime(time);
+    }
 
     // Placeholder values — swap with your live data
-    setTemp(72);
-    setHumidity(68);
+    getLatestWeather();
   </script>
 
 </body>
